@@ -76,6 +76,7 @@ class_names = sorted(os.listdir(DATASET_PATH))
 
 dataset = load_dataset(RESIZED_DATA_PATH, class_names)
 train_x_set, train_y_set, val_x_set, val_y_set, test_x_set, test_y_set = split(dataset, 5, split_type=1)
+
 print(train_x_set)
 print(len(val_x_set))
 print(len(test_x_set))
