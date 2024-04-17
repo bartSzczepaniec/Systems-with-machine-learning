@@ -37,7 +37,7 @@ def split(dataset, class_count, split_type=1, val_set_split3=2):
     val_x_set, val_y_set = shuffle(val_x_set, val_y_set, random_state=0)
     test_x_set, test_y_set = shuffle(test_x_set, test_y_set, random_state=0)
     if split_type == 2 or split_type == 3:
-        train_x_set = augment_dataset(train_x_set)
+        train_x_set, train_y_set = augment_dataset(train_x_set, train_y_set)
         train_x_set = normalize_dataset(train_x_set)
         val_x_set = normalize_dataset(val_x_set)
         test_x_set = normalize_dataset(test_x_set)
