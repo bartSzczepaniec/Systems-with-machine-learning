@@ -37,15 +37,15 @@ val_y_set = data['val_y']
 test_x_set = data['test_x']
 test_y_set = data['test_y']
 
-epochs=30
+epochs = 30
 history = model.fit(
   train_x_set, train_y_set,
   validation_data=(val_x_set, val_y_set),
   epochs=epochs
 )
 
-acc = history.history['accuracy']
-val_acc = history.history['val_accuracy']
+acc = history.history['sparse_categorical_accuracy']
+val_acc = history.history['val_sparse_categorical_accuracy']
 
 loss = history.history['loss']
 val_loss = history.history['val_loss']
