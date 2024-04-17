@@ -1,13 +1,13 @@
 import imgaug.augmenters as iaa
 import random
+import numpy as np
 
 def augment_dataset(dataset):
     augmented_dataset = []
     seq = iaa.Sequential()
 
     for img in dataset:
-        img_arr = img[0]
-        img_class_number = img[1]
+        img_arr = img
 
         rand = random.uniform(0, 1)
         if rand < 0.25:
@@ -19,4 +19,7 @@ def augment_dataset(dataset):
         else:
             seq = iaa.Sequential([iaa.Rotate(90)])
 
-        augmented_dataset.append([seq(image=img_arr), img_class_number])
+        augmented_dataset.append(seq(image=img_arr))
+    
+    augmented_dataset = np.array(augmented_dataset)
+    return np.concatenate((dataset, augmented_dataset))
