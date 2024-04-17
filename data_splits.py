@@ -2,6 +2,8 @@ import numpy as np
 from sklearn.utils import shuffle
 from normalization import normalize_dataset
 from augmentation import augment_dataset
+import imgaug.augmenters as iaa
+import random
 
 CLASS_SIZE = 2000
 
@@ -37,7 +39,33 @@ def split(dataset, class_count, split_type=1, val_set_split3=5):
     val_x_set, val_y_set = shuffle(val_x_set, val_y_set, random_state=0)
     test_x_set, test_y_set = shuffle(test_x_set, test_y_set, random_state=0)
     if split_type == 2 or split_type == 3:
-        train_x_set, train_y_set = augment_dataset(train_x_set, train_y_set)
+        #train_x_set, train_y_set = augment_dataset(train_x_set, train_y_set)
+
+        augmented_dataset = []
+        augmented_dataset_labels = []
+        seq = iaa.Sequential()
+
+        for index, img in enumerate(train_x_set):
+            img_arr = img
+
+            rand = random.uniform(0, 1)
+            if rand < 0.25:
+                seq = iaa.Sequential([iaa.imgcorruptlike.GaussianNoise(severity=1)])
+            elif rand < 0.5:
+                seq = iaa.Sequential([iaa.Fliplr(1.0)])
+            elif rand < 0.75:
+                seq = iaa.Sequential([iaa.Flipud(1.0)])
+            else:
+                seq = iaa.Sequential([iaa.Rotate(90)])
+
+            augmented_dataset.append(seq(image=img_arr))
+            augmented_dataset_labels.append(train_y_set[index])
+
+        augmented_dataset = np.array(augmented_dataset)
+        augmented_dataset_labels = np.array(augmented_dataset_labels)
+        train_x_set = np.concatenate((train_x_set, augmented_dataset))
+        train_y_set = np.concatenate((train_y_set, augmented_dataset_labels))
+
         train_x_set = normalize_dataset(train_x_set)
         val_x_set = normalize_dataset(val_x_set)
         test_x_set = normalize_dataset(test_x_set)
