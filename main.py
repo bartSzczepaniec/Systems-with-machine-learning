@@ -6,6 +6,7 @@ import numpy as np
 import keras
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import time
 from data_splits import split
 from resize_images import resize_images
 from normalization import normalize_dataset
@@ -76,11 +77,10 @@ class_names = sorted(os.listdir(DATASET_PATH))
 
 dataset = load_dataset(RESIZED_DATA_PATH, class_names)
 #train_x_set, train_y_set, val_x_set, val_y_set, test_x_set, test_y_set = split(dataset, 5, split_type=1)
-#np.savez('data_split1.npz', train_x=train_x_set, train_y=train_y_set, val_x=val_x_set, val_y=val_y_set, test_x=test_x_set, test_y=test_y_set)
-train_x_set, train_y_set, val_x_set, val_y_set, test_x_set, test_y_set = split(dataset, 5, split_type=2)
-np.savez('data_split2.npz', train_x=train_x_set, train_y=train_y_set, val_x=val_x_set, val_y=val_y_set, test_x=test_x_set, test_y=test_y_set)
-#train_x_set, train_y_set, val_x_set, val_y_set, test_x_set, test_y_set = split(dataset, 5, split_type=3)
-#np.savez('data_split3.npz', train_x=train_x_set, train_y=train_y_set, val_x=val_x_set, val_y=val_y_set, test_x=test_x_set, test_y=test_y_set)
+#train_x_set, train_y_set, val_x_set, val_y_set, test_x_set, test_y_set = split(dataset, 5, split_type=2)
+train_x_set, train_y_set, val_x_set, val_y_set, test_x_set, test_y_set = split(dataset, 5, split_type=3)
+
+#np.savez('data_split.npz', train_x=train_x_set, train_y=train_y_set, val_x=val_x_set, val_y=val_y_set, test_x=test_x_set, test_y=test_y_set)
 
 
 def create_tfrecord(x_set, y_set, filename):
@@ -88,7 +88,7 @@ def create_tfrecord(x_set, y_set, filename):
         it = 0
         for x, y in zip(x_set, y_set):
             feature = {
-                'x': tf.train.Feature(float_list=tf.train.FloatList(value=x)),
+                'x': tf.train.Feature(float_list=tf.train.FloatList(value=x.flatten())),
                 'y': tf.train.Feature(int64_list=tf.train.Int64List(value=[y]))
             }
             example = tf.train.Example(features=tf.train.Features(feature=feature))
@@ -97,9 +97,12 @@ def create_tfrecord(x_set, y_set, filename):
             it += 1
 print("SAVING TO TFRECORD FILES")
 # Save your data splits to TFRecord files
-#create_tfrecord(train_x_set, train_y_set, 'train.tfrecord')
-#create_tfrecord(val_x_set, val_y_set, 'val.tfrecord')
-#create_tfrecord(test_x_set, test_y_set, 'test.tfrecord')
+start = time.time()
+create_tfrecord(train_x_set, train_y_set, 'train.tfrecord')
+create_tfrecord(val_x_set, val_y_set, 'val.tfrecord')
+create_tfrecord(test_x_set, test_y_set, 'test.tfrecord')
+end = time.time()
+print("Saving to tfrecord file time: " + str(end - start))
 
 print(train_x_set)
 print(len(val_x_set))

@@ -1,3 +1,5 @@
+*.tfrecord
+
 images/
 resized_images/
 # Byte-compiled / optimized / DLL files

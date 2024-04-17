@@ -6,7 +6,7 @@ from augmentation import augment_dataset
 CLASS_SIZE = 2000
 
 
-def split(dataset, class_count, split_type=1, val_set_split3=2):
+def split(dataset, class_count, split_type=1, val_set_split3=5):
     train_x_set, train_y_set, val_x_set, val_y_set, test_x_set, test_y_set = (np.array([]) for _ in range(6))
     # ranges for split 80% : 10% : 10%
     train_range = (0, int(CLASS_SIZE * 8 / 10))
