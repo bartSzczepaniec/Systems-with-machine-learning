@@ -3,8 +3,9 @@ import pickle
 import keras
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import os
 import numpy as np
-IMG_WIDTH = IMG_HEIGTH = 128
+IMG_WIDTH = IMG_HEIGHT = 128
 CHANNELS = 3
 NUM_CLASSES = 5
 BATCH_SIZE = 32
@@ -35,7 +36,7 @@ print("TRAIN_LEN=" + str(train_ds_len) + " VAL_LEN=" + str(val_ds_len))
 print(train_ds_len//BATCH_SIZE)
 print(val_ds_len//BATCH_SIZE)
 model = keras.Sequential([
-    keras.layers.Conv2D(32, 3, padding='same', activation='relu'),
+    keras.layers.Conv2D(32, 3, padding='same', activation='relu', input_shape=(IMG_WIDTH, IMG_HEIGHT, CHANNELS)),
     keras.layers.BatchNormalization(),
     keras.layers.MaxPooling2D((2, 2)),
     keras.layers.Conv2D(64, 3, padding='same', activation='relu'),
@@ -64,11 +65,20 @@ model.compile(optimizer='adam',
 # test_x_set = data['test_x']
 # test_y_set = data['test_y']
 
+checkpoint_path = "saved_models/cp-{epoch:04d}.weights.h5"
+checkpoint_dir = os.path.dirname(checkpoint_path)
+
+# Create a callback that saves the model's weights
+cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
+                                                 save_weights_only=True,
+                                                 verbose=1)
+
 epochs = 30
 history = model.fit(
     train_ds.batch(BATCH_SIZE),
     validation_data=val_ds.batch(BATCH_SIZE),
     epochs=epochs,
+    callbacks=[cp_callback],
     #steps_per_epoch=train_ds_len//BATCH_SIZE,
     #validation_steps=val_ds_len//BATCH_SIZE
 )
@@ -79,7 +89,7 @@ val_acc = history.history['val_sparse_categorical_accuracy']
 loss = history.history['loss']
 val_loss = history.history['val_loss']
 
-epochs_range = range(epochs)
+epochs_range = range(1, epochs + 1)
 
 plt.figure(figsize=(8, 8))
 plt.subplot(1, 2, 1)
@@ -94,3 +104,11 @@ plt.plot(epochs_range, val_loss, label='Validation Loss')
 plt.legend(loc='upper right')
 plt.title('Training and Validation Loss')
 plt.show()
+
+print(val_acc)
+max_val_acc = max(val_acc)
+max_val_acc_epoch = val_acc.index(max_val_acc) + 1
+print("Max val_acc=" + str(max_val_acc) + ", achieved in epoch no." + str(max_val_acc_epoch))
+
+# model.load_weights("saved_models/cp-0005.weights.h5")
+# loss, acc = model.evaluate(test_ds.batch(BATCH_SIZE))
