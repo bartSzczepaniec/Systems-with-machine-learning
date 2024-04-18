@@ -1,4 +1,8 @@
 *.tfrecord
+*.zip
+split_1/
+split_2/
+split_3/
 
 images/
 resized_images/
