@@ -77,9 +77,9 @@ def decode_fn(record_bytes):
     return parsed_example["x"], parsed_example["y"]
 
 
-train_ds = tf.data.TFRecordDataset(["./train.tfrecord"]).map(decode_fn)
-val_ds = tf.data.TFRecordDataset(["./val.tfrecord"]).map(decode_fn)
-test_ds = tf.data.TFRecordDataset(["./test.tfrecord"]).map(decode_fn)
+train_ds = tf.data.TFRecordDataset(["./split_2/train.tfrecord"]).map(decode_fn)
+val_ds = tf.data.TFRecordDataset(["./split_2/val.tfrecord"]).map(decode_fn)
+test_ds = tf.data.TFRecordDataset(["./split_2/test.tfrecord"]).map(decode_fn)
 
 train_ds_len = 0
 for batch in train_ds:
@@ -122,8 +122,10 @@ if TRAINING:
     # val_y_set = data['val_y']
     # test_x_set = data['test_x']
     # test_y_set = data['test_y']
+    train_ds = train_ds.map(encode)
+    val_ds = val_ds.map(encode)
 
-    checkpoint_path = "saved_models/cp-{epoch:04d}.weights.h5"
+    checkpoint_path = "saved_models_2/cp-{epoch:04d}.weights.h5"
     checkpoint_dir = os.path.dirname(checkpoint_path)
 
     # Create a callback that saves the model's weights
@@ -137,38 +139,73 @@ if TRAINING:
         validation_data=val_ds.batch(BATCH_SIZE),
         epochs=epochs,
         callbacks=[cp_callback],
-        # steps_per_epoch=train_ds_len//BATCH_SIZE,
+        # steps_per_epoch=20,
         # validation_steps=val_ds_len//BATCH_SIZE
     )
 
-    acc = history.history['sparse_categorical_accuracy']
-    val_acc = history.history['val_sparse_categorical_accuracy']
+    acc = history.history['categorical_accuracy']
+    val_acc = history.history['val_categorical_accuracy']
 
     loss = history.history['loss']
     val_loss = history.history['val_loss']
 
+    false_positives = np.array(history.history['false_positives'])
+    val_false_positives = np.array(history.history['val_false_positives'])
+
+    true_negatives = np.array(history.history['true_negatives'])
+    val_true_negatives = np.array(history.history['val_true_negatives'])
+
+    specificity = true_negatives / (true_negatives + false_positives)
+    val_specificity = val_true_negatives / (val_true_negatives + val_false_positives)
+
+    f1_score = history.history['f1_score']
+    val_f1_score = history.history['val_f1_score']
+
+    macro_f1_score = np.mean(f1_score, axis=1)
+    val_macro_f1_score = np.mean(val_f1_score, axis=1)
     epochs_range = range(1, epochs + 1)
 
     plt.figure(figsize=(8, 8))
-    plt.subplot(1, 2, 1)
     plt.plot(epochs_range, acc, label='Training Accuracy')
     plt.plot(epochs_range, val_acc, label='Validation Accuracy')
     plt.legend(loc='lower right')
     plt.title('Training and Validation Accuracy')
+    plt.show()
 
-    plt.subplot(1, 2, 2)
     plt.plot(epochs_range, loss, label='Training Loss')
     plt.plot(epochs_range, val_loss, label='Validation Loss')
     plt.legend(loc='upper right')
     plt.title('Training and Validation Loss')
     plt.show()
 
+    plt.plot(epochs_range, macro_f1_score, label='Training Macro F1 Score')
+    plt.plot(epochs_range, val_macro_f1_score, label='Validation Macro F1 Score')
+    plt.legend(loc='lower right')
+    plt.title('Training and Validation Macro F1 Score')
+    plt.show()
+
+    plt.plot(epochs_range, specificity, label='Training Specificity')
+    plt.plot(epochs_range, val_specificity, label='Validation Specificity')
+    plt.legend(loc='lower left')
+    plt.title('Training and Validation Specificity')
+    plt.show()
+
     print(val_acc)
     max_val_acc = max(val_acc)
     max_val_acc_epoch = val_acc.index(max_val_acc) + 1
     print("Max val_acc=" + str(max_val_acc) + ", achieved in epoch no." + str(max_val_acc_epoch))
+
+    print(val_macro_f1_score)
+    max_val_macro_f1_score = max(val_macro_f1_score)
+    max_val_macro_f1_score_epoch = val_macro_f1_score.tolist().index(max_val_macro_f1_score) + 1
+    print("Max val_macro_f1_score=" + str(max_val_macro_f1_score) + ", achieved in epoch no." + str(max_val_macro_f1_score_epoch))
+
+    print(val_specificity)
+    max_val_specificity = max(val_specificity)
+    max_val_specificity_epoch = val_specificity.tolist().index(max_val_specificity) + 1
+    print("Max val_specificity=" + str(max_val_specificity) + ", achieved in epoch no." + str(max_val_specificity_epoch))
 else:
-    model.load_weights("saved_models/cp-0029.weights.h5")
+    model.load_weights("saved_models_2/cp-0001.weights.h5")
     perform_evaluation(model, train_ds, "TRAIN DATASET")
     perform_evaluation(model, val_ds, "VALIDATION DATASET")
     perform_evaluation(model, test_ds, "TEST DATASET")
